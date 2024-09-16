@@ -33,3 +33,57 @@ def find_missing_values(df):
     print(f"From {df.shape[1]} columns selected, there are {missing_data_summary_table.shape[0]} columns with missing values.")
 
     return missing_data_summary_table
+
+
+def get_outlier_summary(data):
+    """
+    Calculates outlier summary statistics for a DataFrame.
+
+    Args:
+        data : Input DataFrame.
+
+    Returns:
+        Outlier summary DataFrame.
+    """
+
+    outlier_summary = pd.DataFrame(columns=['Variable', 'Number of Outliers'])
+    data = data.select_dtypes(include='number')
+
+    for column_name in data.columns:
+        q1 = data[column_name].quantile(0.25)
+        q3 = data[column_name].quantile(0.75)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        outliers = data[(data[column_name] < lower_bound) | (data[column_name] > upper_bound)]
+
+        outlier_summary = pd.concat(
+            [outlier_summary, pd.DataFrame({'Variable': [column_name], 'Number of Outliers': [outliers.shape[0]]})],
+            ignore_index=True
+        )
+    non_zero_count = (outlier_summary['Number of Outliers'] > 0).sum()
+    print(f"From {data.shape[1]} selected numerical columns, there are {non_zero_count} columns with outlier values.")
+
+    return outlier_summary
+
+def remove_outliers_winsorization(xdr_data):
+    """
+    Removes outliers from specified columns of a DataFrame using winsorization.
+
+    Args:
+        data: The input DataFrame.
+        column_names (list): A list of column names to process.
+
+    Returns:
+        The DataFrame with outliers removed.
+    """
+    # data = xdr_data.select_dtypes(include='number')
+    for column_name in xdr_data.select_dtypes(include='number').columns:
+        q1 = xdr_data[column_name].quantile(0.25)
+        q3 = xdr_data[column_name].quantile(0.75)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        xdr_data[column_name] = xdr_data[column_name].clip(lower_bound, upper_bound)
+
+    return xdr_data
