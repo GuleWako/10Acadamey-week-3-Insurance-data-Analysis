@@ -1,6 +1,7 @@
 import pandas as  pd
 from scipy import stats
 from scipy.stats import chi2_contingency, ttest_ind
+import matplotlib.pyplot as plt
 def load_data(filename):
     """Loads the insurance claim data from a txt file.
 
@@ -36,6 +37,48 @@ def find_missing_values(df):
 
     return missing_data_summary_table
 
+
+def replace_missing_values(data):
+  """
+  Replaces missing values in a DataFrame with the mean for numeric columns and the mode for categorical columns.
+
+  Args:
+    data: The input DataFrame.
+
+  Returns:
+    The DataFrame with missing values replaced.
+  """
+
+  # Identify numeric and categorical columns
+  numeric_columns = data.select_dtypes(include='number').columns
+  categorical_columns = data.select_dtypes(include='object').columns
+
+  # Replace missing values in numeric columns with the mean
+  for column in numeric_columns:
+    column_mean = data[column].mean()
+    data[column] = data[column].fillna(column_mean)
+
+  # Replace missing values in categorical columns with the mode
+  for column in categorical_columns:
+    column_mode = data[column].mode().iloc[0]
+    data[column] = data[column].fillna(column_mode)
+
+  return data
+
+def histogramPlotForNumericalColumns(insurance_data):
+    for column in insurance_data.select_dtypes(include='number').columns:
+        print(insurance_data[column].value_counts())
+        plt.figure(figsize=(20,6))
+        plt.hist(insurance_data[column], bins=30)
+        plt.title(f"Histogram of {column}")
+        plt.show()
+
+def barchartPlotForCategoricalColumns(insurance_data):
+    for column in insurance_data.select_dtypes(include='object').columns:
+        print(insurance_data[column].value_counts())
+        insurance_data[column].value_counts().plot(kind='bar',figsize=(20,6))
+        plt.title(f"Bar Chart of {column}")
+        plt.show()
 
 def get_outlier_summary(data):
     """
@@ -120,6 +163,35 @@ def ABhypothesisTesting(insurance_data,feature,metric1,metric2,kpi):
     print(f"P-value of {feature} values {metric1} and {metric2}: {p_value}")
 
     # Interpret the results
+    alpha = 0.05  # significance level
+    if p_value < alpha:
+        print("Reject the null hypothesis: There is a significant difference between the groups.")
+    else:
+        print("Fail to reject the null hypothesis: No significant difference between the groups.")
+
+
+def chi_squared_test(df, categorical_column1, categorical_column2):
+    """
+    Performs a chi-squared test to determine if there's a significant association between two categorical variables.
+
+    Args:
+        df: The pandas DataFrame containing the data.
+        categorical_column1: The first categorical column.
+        categorical_column2: The second categorical column.
+
+    Returns:
+        chi2: The chi-squared test statistic.
+        p_value: The p-value associated with the chi-squared test.
+    """
+
+    # Create a contingency table
+    contingency_table = pd.crosstab(df[categorical_column1], df[categorical_column2])
+
+    # Perform the chi-squared test
+    chi2, p_value, _, _ = stats.chi2_contingency(contingency_table)
+    print(f"Chi-squared statistic of {categorical_column1} and {categorical_column2}:", chi2)
+    print("P-value:", p_value)
+    
     alpha = 0.05  # significance level
     if p_value < alpha:
         print("Reject the null hypothesis: There is a significant difference between the groups.")
