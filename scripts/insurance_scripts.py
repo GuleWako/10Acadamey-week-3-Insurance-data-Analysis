@@ -1,6 +1,7 @@
 import pandas as  pd
 from scipy import stats
 from scipy.stats import chi2_contingency, ttest_ind
+import matplotlib.pyplot as plt
 def load_data(filename):
     """Loads the insurance claim data from a txt file.
 
@@ -36,6 +37,48 @@ def find_missing_values(df):
 
     return missing_data_summary_table
 
+
+def replace_missing_values(data):
+  """
+  Replaces missing values in a DataFrame with the mean for numeric columns and the mode for categorical columns.
+
+  Args:
+    data: The input DataFrame.
+
+  Returns:
+    The DataFrame with missing values replaced.
+  """
+
+  # Identify numeric and categorical columns
+  numeric_columns = data.select_dtypes(include='number').columns
+  categorical_columns = data.select_dtypes(include='object').columns
+
+  # Replace missing values in numeric columns with the mean
+  for column in numeric_columns:
+    column_mean = data[column].mean()
+    data[column] = data[column].fillna(column_mean)
+
+  # Replace missing values in categorical columns with the mode
+  for column in categorical_columns:
+    column_mode = data[column].mode().iloc[0]
+    data[column] = data[column].fillna(column_mode)
+
+  return data
+
+def histogramPlotForNumericalColumns(insurance_data):
+    for column in insurance_data.select_dtypes(include='number').columns:
+        print(insurance_data[column].value_counts())
+        plt.figure(figsize=(20,6))
+        plt.hist(insurance_data[column], bins=30)
+        plt.title(f"Histogram of {column}")
+        plt.show()
+
+def barchartPlotForCategoricalColumns(insurance_data):
+    for column in insurance_data.select_dtypes(include='object').columns:
+        print(insurance_data[column].value_counts())
+        insurance_data[column].value_counts().plot(kind='bar',figsize=(20,6))
+        plt.title(f"Bar Chart of {column}")
+        plt.show()
 
 def get_outlier_summary(data):
     """
