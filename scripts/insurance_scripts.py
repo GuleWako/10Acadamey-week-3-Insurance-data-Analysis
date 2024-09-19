@@ -111,7 +111,7 @@ def get_outlier_summary(data):
 
     return outlier_summary
 
-def remove_outliers_winsorization(xdr_data):
+def remove_outliers_winsorization(data):
     """
     Removes outliers from specified columns of a DataFrame using winsorization.
 
@@ -123,15 +123,15 @@ def remove_outliers_winsorization(xdr_data):
         The DataFrame with outliers removed.
     """
     # data = xdr_data.select_dtypes(include='number')
-    for column_name in xdr_data.select_dtypes(include='number').columns:
-        q1 = xdr_data[column_name].quantile(0.25)
-        q3 = xdr_data[column_name].quantile(0.75)
+    for column_name in data.select_dtypes(include='number').columns:
+        q1 = data[column_name].quantile(0.25)
+        q3 = data[column_name].quantile(0.75)
         iqr = q3 - q1
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
-        xdr_data[column_name] = xdr_data[column_name].clip(lower_bound, upper_bound)
+        data[column_name] = data[column_name].clip(lower_bound, upper_bound)
 
-    return xdr_data
+    return data
 
 def hypothesis_test_difference_between_columns(df, kpi_column, group_column):
   
